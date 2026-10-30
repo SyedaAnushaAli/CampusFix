@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CampusFix – Maintenance Requests</title>
+<style>
+ body{font-family:Arial,sans-serif;background:#eef2f7;margin:0;color:#222}
+ header{background:#1f3864;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+ main{max-width:960px;margin:20px auto;padding:0 12px}
+ .card{background:#fff;border-radius:8px;box-shadow:0 1px 6px #0002;padding:16px 20px;margin-bottom:16px}
+ label{display:block;margin-top:10px;font-size:14px} input,select,textarea{width:100%;padding:7px;box-sizing:border-box;margin-top:3px}
+ button{padding:7px 12px;margin-top:10px;cursor:pointer} .err{color:#b00020;font-size:13px;min-height:16px} .ok{color:#1b7f3b;font-size:13px}
+ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border-bottom:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}
+ .tag{padding:2px 7px;border-radius:10px;color:#fff;font-size:12px} .Critical{background:#b00020}.High{background:#e65100}.Medium{background:#f9a825;color:#222}.Low{background:#2e7d32}
+ .hidden{display:none} .row{display:flex;gap:12px} .row>div{flex:1}
+</style>
+</head>
+<body>
+<header><strong>CampusFix</strong><span id="who"></span></header>
+<main>
+ <section id="loginView" class="card" style="max-width:340px;margin:40px auto">
+  <h2>Login</h2>
+  <label for="username">Username</label><input id="username" autocomplete="off">
+  <label for="password">Password</label><input id="password" type="password">
+  <div id="loginErr" class="err" role="alert"></div>
+  <button id="loginBtn">Login</button>
+  <p style="font-size:12px;color:#666">Demo: student1 / tech1 / admin1 (password Pass1234)</p>
+ </section>
+ <section id="appView" class="hidden">
+  <div id="statsBox" class="card hidden"></div>
+  <div id="formCard" class="card hidden">
+   <h3>Report a problem</h3>
+   <div class="row">
+    <div><label for="category">Category</label><select id="category"></select></div>
+    <div><label for="urgency">Urgency</label><select id="urgency"><option>low</option><option selected>medium</option><option>high</option></select></div>
+   </div>
+   <label for="location">Location (e.g. Block B, Lab 3)</label><input id="location">
+   <label for="description">Description</label><textarea id="description" rows="3"></textarea>
+   <label><input id="safety" type="checkbox" style="width:auto"> This is a safety hazard (exposed wires, flooding, etc.)</label>
+   <div id="formMsg" class="err" role="alert"></div>
+   <button id="submitBtn">Submit request</button>
+  </div>
+  <div class="card"><h3 id="listTitle">Requests</h3><div id="list"></div></div>
+ </section>
+</main>
+<script>
+let token=null,me=null,techs=[];
+const $=id=>document.getElementById(id);
+async function api(path,method='GET',body){
+  const r=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({})); return {ok:r.ok,status:r.status,data:j};
+}
+$('loginBtn').onclick=async()=>{
+  const r=await api('/login','POST',{username:$('username').value,password:$('password').value});
+  if(!r.ok){$('loginErr').textContent=r.data.error;return;}
+  token=r.data.token;me=r.data.user;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
+  $('who').innerHTML=me.name+' ('+me.role+') <button id="logout" style="margin:0 0 0 8px">Logout</button>';
+  $('logout').onclick=()=>location.reload();
+  $('category').innerHTML=['Electrical','Plumbing','Network/IT','Furniture','Cleaning','Other'].map(c=>`<option>${c}</option>`).join('');
+  $('formCard').classList.toggle('hidden',me.role!=='requester');
+  if(me.role==='admin'){techs=(await api('/technicians')).data;}
+  refresh();
+};
+$('submitBtn').onclick=async()=>{
+  const r=await api('/requests','POST',{category:$('category').value,location:$('location').value,description:$('description').value,urgency:$('urgency').value,safetyRisk:$('safety').checked});
+  const m=$('formMsg');
+  if(r.ok){m.className='ok';m.textContent=r.data.merged?'Similar open request found – your report was added to it (priority raised).':'Request submitted.';$('description').value='';}
+  else{m.className='err';m.textContent=(r.data.errors||[r.data.error]).join(' | ');}
+  refresh();
+};
+async function act(id,path,body){const r=await api('/requests/'+id+path,'POST',body);if(!r.ok)alert(r.data.error);refresh();}
+async function refresh(){
+  const r=await api('/requests');const rows=r.data;
+  $('listTitle').textContent=me.role==='admin'?'All requests (highest priority first)':me.role==='technician'?'My assigned jobs':'My reports';
+  if(me.role==='admin'){const s=(await api('/stats')).data;$('statsBox').classList.remove('hidden');
+    $('statsBox').innerHTML='<strong>Dashboard:</strong> unresolved '+s.unresolved+' | '+Object.entries(s.byStatus).map(([k,v])=>k+': '+v).join(' | ');}
+  $('list').innerHTML='<table><tr><th>#</th><th>Category / Location</th><th>Description</th><th>Priority</th><th>Reports</th><th>Status</th><th>Action</th></tr>'+rows.map(x=>{
+    let a='';
+    if(me.role==='admin'&&x.status==='Open')a=`<select id="t${x.id}">${techs.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select><button onclick="act(${x.id},'/assign',{technicianId:document.getElementById('t${x.id}').value})">Assign</button>`;
+    if(me.role==='technician'&&x.status==='Assigned')a=`<button onclick="act(${x.id},'/status',{status:'In Progress'})">Start work</button>`;
+    if(me.role==='technician'&&x.status==='In Progress')a=`<button onclick="act(${x.id},'/status',{status:'Resolved',note:prompt('Resolution note?')||''})">Mark resolved</button>`;
+    if(me.role==='requester'&&x.status==='Resolved')a=`<button onclick="act(${x.id},'/status',{status:'Open',note:prompt('Why reopen?')||''})">Reopen</button>`;
+    return `<tr><td>${x.id}</td><td>${x.category}<br><small>${x.location}</small></td><td>${x.description.replace(/</g,'&lt;')}</td><td><span class="tag ${x.priority_label}">${x.priority_label} (${x.priority})</span></td><td>${x.report_count}</td><td>${x.status}${x.technician_name?'<br><small>'+x.technician_name+'</small>':''}</td><td>${a}</td></tr>`;}).join('')+'</table>';
+}
+</script>
+</body>
+</html>
