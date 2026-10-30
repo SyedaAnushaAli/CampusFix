@@ -1,0 +1,39 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Times New Roman
+skinparam defaultFontSize 13
+actor Requester
+participant "Web UI" as UI
+participant "RequestController" as C
+participant PriorityCalculator as P
+database "SQLite" as DB
+actor Administrator
+actor Technician
+Requester -> UI : fill form, click Submit
+UI -> C : POST /api/requests (token, data)
+C -> C : check role = requester, validate fields
+alt invalid data
+  C --> UI : 400 + list of errors
+else valid
+  C -> DB : find open request, same category + location
+  alt similar open request exists
+    C -> P : computePriority(withReportCount + 1)
+    C -> DB : update count and priority, add reporter, add history
+    C --> UI : 200 merged = true
+  else no duplicate
+    C -> P : computePriority(urgency, safety, 1)
+    P --> C : score, label
+    C -> DB : insert request, reporter, history("Open")
+    C --> UI : 201 created
+  end
+end
+UI --> Requester : show confirmation
+Administrator -> UI : choose technician, click Assign
+UI -> C : POST /api/requests/{id}/assign
+C -> DB : status = Assigned, add history
+Technician -> UI : Start work, Mark resolved (note)
+UI -> C : POST /api/requests/{id}/status
+C -> C : checkTransition(from, to, role)
+C -> DB : update status, add history
+C --> UI : updated request
+@enduml

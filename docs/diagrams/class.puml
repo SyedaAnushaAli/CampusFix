@@ -1,0 +1,75 @@
+@startuml
+!pragma layout smetana
+skinparam shadowing false
+skinparam defaultFontName Times New Roman
+skinparam defaultFontSize 13
+skinparam classAttributeIconSize 0
+class User {
+  - id : int
+  - username : String
+  - name : String
+  - role : Role
+  - salt : String
+  - hash : String
+  + verifyPassword(pw) : boolean
+}
+enum Role {
+  requester
+  technician
+  admin
+}
+class MaintenanceRequest {
+  - id : int
+  - category : String
+  - location : String
+  - description : String
+  - urgency : Urgency
+  - safetyRisk : boolean
+  - reportCount : int
+  - priority : int
+  - priorityLabel : String
+  - status : Status
+  - createdAt : DateTime
+  + addReport(user)
+  + changeStatus(to, note, actor)
+}
+enum Urgency {
+  low
+  medium
+  high
+}
+enum Status {
+  Open
+  Assigned
+  In_Progress
+  Resolved
+}
+class HistoryEntry {
+  - status : Status
+  - note : String
+  - at : DateTime
+}
+class PriorityCalculator {
+  + computePriority(urgency, safetyRisk, reportCount) : Priority
+}
+class StatusWorkflow {
+  + checkTransition(from, to, role) : Result
+}
+class RequestController {
+  + submit(request)
+  + assign(requestId, technicianId)
+  + updateStatus(requestId, status, note)
+  + list()
+  + stats()
+}
+User "1" -- "*" MaintenanceRequest : reports >
+User "0..1" -- "*" MaintenanceRequest : assigned to >
+MaintenanceRequest "1" *-- "*" HistoryEntry : has
+HistoryEntry "*" -- "1" User : made by
+User --> Role
+MaintenanceRequest --> Status
+MaintenanceRequest --> Urgency
+RequestController ..> MaintenanceRequest : manages
+RequestController ..> PriorityCalculator : uses
+RequestController ..> StatusWorkflow : uses
+@enduml

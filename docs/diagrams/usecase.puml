@@ -1,0 +1,36 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName Times New Roman
+skinparam defaultFontSize 14
+skinparam packageStyle rectangle
+actor "Requester\n(Student / Staff)" as R
+actor "Administrator" as A
+actor "Technician" as T
+rectangle "CampusFix" {
+  usecase "Log in" as UC0
+  usecase "Submit maintenance request" as UC1
+  usecase "Merge duplicate report" as UC2
+  usecase "Track own requests" as UC3
+  usecase "Reopen resolved request" as UC4
+  usecase "View prioritised queue" as UC5
+  usecase "Assign technician" as UC6
+  usecase "View dashboard statistics" as UC7
+  usecase "View assigned jobs" as UC8
+  usecase "Update job status" as UC9
+}
+R --> UC1
+R --> UC3
+R --> UC4
+A --> UC5
+A --> UC6
+A --> UC7
+T --> UC8
+T --> UC9
+R --> UC0
+A --> UC0
+T --> UC0
+UC2 ..> UC1 : <<extend>>\n(similar open request)
+UC1 ..> UC0 : <<include>>
+UC9 ..> UC8 : <<include>>
+@enduml
