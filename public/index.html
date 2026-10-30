@@ -47,6 +47,7 @@
 <script>
 let token=null,me=null,techs=[];
 const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(path,method='GET',body){
   const r=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});
   const j=await r.json().catch(()=>({})); return {ok:r.ok,status:r.status,data:j};
@@ -77,11 +78,11 @@ async function refresh(){
     $('statsBox').innerHTML='<strong>Dashboard:</strong> unresolved '+s.unresolved+' | '+Object.entries(s.byStatus).map(([k,v])=>k+': '+v).join(' | ');}
   $('list').innerHTML='<table><tr><th>#</th><th>Category / Location</th><th>Description</th><th>Priority</th><th>Reports</th><th>Status</th><th>Action</th></tr>'+rows.map(x=>{
     let a='';
-    if(me.role==='admin'&&x.status==='Open')a=`<select id="t${x.id}">${techs.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select><button onclick="act(${x.id},'/assign',{technicianId:document.getElementById('t${x.id}').value})">Assign</button>`;
+    if(me.role==='admin'&&x.status==='Open')a=`<select id="t${x.id}">${techs.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select><button onclick="act(${x.id},'/assign',{technicianId:document.getElementById('t${x.id}').value})">Assign</button>`;
     if(me.role==='technician'&&x.status==='Assigned')a=`<button onclick="act(${x.id},'/status',{status:'In Progress'})">Start work</button>`;
     if(me.role==='technician'&&x.status==='In Progress')a=`<button onclick="act(${x.id},'/status',{status:'Resolved',note:prompt('Resolution note?')||''})">Mark resolved</button>`;
     if(me.role==='requester'&&x.status==='Resolved')a=`<button onclick="act(${x.id},'/status',{status:'Open',note:prompt('Why reopen?')||''})">Reopen</button>`;
-    return `<tr><td>${x.id}</td><td>${x.category}<br><small>${x.location}</small></td><td>${x.description.replace(/</g,'&lt;')}</td><td><span class="tag ${x.priority_label}">${x.priority_label} (${x.priority})</span></td><td>${x.report_count}</td><td>${x.status}${x.technician_name?'<br><small>'+x.technician_name+'</small>':''}</td><td>${a}</td></tr>`;}).join('')+'</table>';
+    return `<tr><td>${x.id}</td><td>${esc(x.category)}<br><small>${esc(x.location)}</small></td><td>${esc(x.description)}</td><td><span class="tag ${x.priority_label}">${x.priority_label} (${x.priority})</span></td><td>${x.report_count}</td><td>${x.status}${x.technician_name?'<br><small>'+esc(x.technician_name)+'</small>':''}</td><td>${a}</td></tr>`;}).join('')+'</table>';
 }
 </script>
 </body>
