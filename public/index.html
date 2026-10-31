@@ -5,41 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CampusFix – Maintenance Requests</title>
 <style>
- body{font-family:Arial,sans-serif;background:#eef2f7;margin:0;color:#222}
- header{background:#1f3864;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
- main{max-width:960px;margin:20px auto;padding:0 12px}
- .card{background:#fff;border-radius:8px;box-shadow:0 1px 6px #0002;padding:16px 20px;margin-bottom:16px}
- label{display:block;margin-top:10px;font-size:14px} input,select,textarea{width:100%;padding:7px;box-sizing:border-box;margin-top:3px}
- button{padding:7px 12px;margin-top:10px;cursor:pointer} .err{color:#b00020;font-size:13px;min-height:16px} .ok{color:#1b7f3b;font-size:13px}
- table{width:100%;border-collapse:collapse;font-size:13px} th,td{border-bottom:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}
- .tag{padding:2px 7px;border-radius:10px;color:#fff;font-size:12px} .Critical{background:#b00020}.High{background:#e65100}.Medium{background:#f9a825;color:#222}.Low{background:#2e7d32}
- .hidden{display:none} .row{display:flex;gap:12px} .row>div{flex:1}
+ :root{--glass:rgba(255,255,255,.13);--glass2:rgba(255,255,255,.2);--line:rgba(255,255,255,.32);--txt:#fff;--mut:rgba(255,255,255,.72)}
+ *{box-sizing:border-box}
+ body{margin:0;min-height:100vh;font-family:"Segoe UI",Inter,Arial,sans-serif;color:var(--txt);
+  background:linear-gradient(135deg,#1b1464 0%,#5b2a9d 38%,#c2307e 70%,#ff8a4c 100%);background-attachment:fixed;overflow-x:hidden}
+ .blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.55;z-index:0;animation:float 14s ease-in-out infinite}
+ .b1{width:380px;height:380px;background:#00e5ff;top:-90px;left:-80px}
+ .b2{width:340px;height:340px;background:#7c4dff;bottom:-90px;right:8%;animation-delay:-5s}
+ .b3{width:260px;height:260px;background:#ffd54f;top:38%;right:-70px;animation-delay:-9s;opacity:.4}
+ @keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-34px)}}
+ @media (prefers-reduced-motion:reduce){.blob{animation:none}}
+ header,main{position:relative;z-index:1}
+ header{margin:14px auto 0;max-width:1040px;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;
+  background:var(--glass);border:1px solid var(--line);border-radius:18px;backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);box-shadow:0 8px 32px rgba(0,0,0,.25)}
+ .brand{font-weight:800;font-size:20px;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
+ .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#00e5ff,#7c4dff);display:inline-block;box-shadow:0 0 16px #00e5ff99}
+ #who{display:flex;align-items:center;gap:10px;font-size:14px}
+ .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ffd54f,#ff6f61);display:grid;place-items:center;font-weight:700;color:#3b1450}
+ .role{font-style:normal;font-size:11px;text-transform:uppercase;letter-spacing:1px;background:var(--glass2);padding:2px 8px;border-radius:20px;margin-left:4px}
+ main{max-width:1040px;margin:22px auto;padding:0 14px}
+ .card{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:22px 26px;margin-bottom:18px;
+  backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);box-shadow:0 12px 40px rgba(10,0,40,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+ h2,h3{margin:0 0 6px;font-weight:700} h3{font-size:19px}
+ .sub{color:var(--mut);font-size:13px;margin:0 0 8px}
+ label{display:block;margin-top:12px;font-size:13px;color:var(--mut);letter-spacing:.3px}
+ input,select,textarea{width:100%;margin-top:5px;padding:10px 12px;color:#fff;font:inherit;font-size:14px;background:rgba(255,255,255,.14);
+  border:1px solid var(--line);border-radius:12px;outline:none;transition:.2s}
+ input::placeholder,textarea::placeholder{color:rgba(255,255,255,.5)}
+ input:focus,select:focus,textarea:focus{border-color:#fff;background:rgba(255,255,255,.22);box-shadow:0 0 0 3px rgba(0,229,255,.35)}
+ select option{color:#222;background:#fff}
+ input[type=checkbox]{width:auto;margin-right:8px;accent-color:#ff5c8a;transform:scale(1.2)}
+ button{font:inherit;cursor:pointer;color:#fff;border:1px solid var(--line);background:var(--glass2);padding:9px 16px;border-radius:12px;margin-top:12px;transition:.2s}
+ button:hover{background:rgba(255,255,255,.3);transform:translateY(-1px)}
+ button.primary{background:linear-gradient(135deg,#00c6ff,#7c4dff 60%,#ff4d8d);border:none;font-weight:600;box-shadow:0 6px 20px rgba(124,77,255,.5)}
+ button.primary:hover{filter:brightness(1.12);box-shadow:0 8px 26px rgba(124,77,255,.7)}
+ button.sm{padding:6px 12px;margin-top:6px;font-size:13px} button.ghost{margin:0;padding:6px 12px;font-size:13px}
+ .msg{font-size:13px;min-height:18px;margin-top:10px} .err{color:#ffc2d0} .ok{color:#a8ffcf}
+ .row{display:flex;gap:14px;flex-wrap:wrap}.row>div{flex:1;min-width:200px}
+ .hidden{display:none}
+ #loginView{max-width:370px;margin:70px auto 0;text-align:center}
+ #loginView label,#loginView .sub{text-align:left}
+ #loginView .logo{width:54px;height:54px;border-radius:16px;margin-bottom:10px}
+ #loginView button{width:100%;margin-top:18px}
+ .hint{font-size:12px;color:var(--mut);margin-top:14px}
+ #statsBox{display:flex;gap:12px;flex-wrap:wrap}
+ .chip{flex:1;min-width:110px;text-align:center;padding:12px 8px;border-radius:16px;background:var(--glass);border:1px solid var(--line)}
+ .chip b{display:block;font-size:28px;line-height:1.1} .chip span{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px}
+ .chip.big{background:linear-gradient(135deg,rgba(0,229,255,.35),rgba(124,77,255,.35))}
+ .tablewrap{overflow-x:auto}
+ table{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:13.5px}
+ th{text-align:left;color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.8px;padding:0 10px}
+ td{padding:11px 10px;vertical-align:top;background:rgba(255,255,255,.09);border-top:1px solid rgba(255,255,255,.18);border-bottom:1px solid rgba(255,255,255,.12)}
+ td:first-child{border-left:1px solid rgba(255,255,255,.18);border-radius:14px 0 0 14px} td:last-child{border-right:1px solid rgba(255,255,255,.18);border-radius:0 14px 14px 0}
+ tr:hover td{background:rgba(255,255,255,.17)}
+ small{color:var(--mut)}
+ .tag{display:inline-block;padding:3px 11px;border-radius:20px;font-size:12px;font-weight:700;color:#fff;white-space:nowrap}
+ .Critical{background:linear-gradient(135deg,#ff1744,#ff5c8a);box-shadow:0 0 14px #ff1744aa}
+ .High{background:linear-gradient(135deg,#ff6d00,#ffab40);box-shadow:0 0 12px #ff6d0088}
+ .Medium{background:linear-gradient(135deg,#ffd740,#ffea00);color:#3b2f00;box-shadow:0 0 10px #ffd74066}
+ .Low{background:linear-gradient(135deg,#00c853,#69f0ae);color:#05381c;box-shadow:0 0 10px #00c85366}
+ .st{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.2);border:1px solid var(--line)}
+ .st-Open{background:rgba(0,229,255,.25)} .st-Assigned{background:rgba(255,213,79,.28)} .st-InProgress{background:rgba(124,77,255,.4)} .st-Resolved{background:rgba(105,240,174,.3)}
+ .empty{color:var(--mut);text-align:center;padding:14px}
+ @media (max-width:640px){header{flex-direction:column;gap:8px}.card{padding:16px}}
 </style>
 </head>
 <body>
-<header><strong>CampusFix</strong><span id="who"></span></header>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<header><div class="brand"><span class="logo"></span>CampusFix</div><div id="who"></div></header>
 <main>
- <section id="loginView" class="card" style="max-width:340px;margin:40px auto">
-  <h2>Login</h2>
-  <label for="username">Username</label><input id="username" autocomplete="off">
-  <label for="password">Password</label><input id="password" type="password">
-  <div id="loginErr" class="err" role="alert"></div>
-  <button id="loginBtn">Login</button>
-  <p style="font-size:12px;color:#666">Demo: student1 / tech1 / admin1 (password Pass1234)</p>
+ <section id="loginView" class="card">
+  <span class="logo"></span>
+  <h2>Welcome back</h2>
+  <p class="sub">Sign in to report or manage campus maintenance</p>
+  <label for="username">Username</label><input id="username" autocomplete="off" placeholder="e.g. student1">
+  <label for="password">Password</label><input id="password" type="password" placeholder="••••••••">
+  <div id="loginErr" class="msg err" role="alert"></div>
+  <button id="loginBtn" class="primary">Login</button>
+  <p class="hint">Demo: student1 · tech1 · admin1 &nbsp;(password Pass1234)</p>
  </section>
  <section id="appView" class="hidden">
-  <div id="statsBox" class="card hidden"></div>
+  <div id="statsBox" class="hidden"></div>
   <div id="formCard" class="card hidden">
    <h3>Report a problem</h3>
+   <p class="sub">Similar open requests are merged automatically so the team sees one clear job.</p>
    <div class="row">
     <div><label for="category">Category</label><select id="category"></select></div>
     <div><label for="urgency">Urgency</label><select id="urgency"><option>low</option><option selected>medium</option><option>high</option></select></div>
    </div>
-   <label for="location">Location (e.g. Block B, Lab 3)</label><input id="location">
-   <label for="description">Description</label><textarea id="description" rows="3"></textarea>
-   <label><input id="safety" type="checkbox" style="width:auto"> This is a safety hazard (exposed wires, flooding, etc.)</label>
-   <div id="formMsg" class="err" role="alert"></div>
-   <button id="submitBtn">Submit request</button>
+   <label for="location">Location (e.g. Block B, Lab 3)</label><input id="location" placeholder="Building, room">
+   <label for="description">Description</label><textarea id="description" rows="3" placeholder="What is wrong? (min 10 characters)"></textarea>
+   <label><input id="safety" type="checkbox"> This is a safety hazard (exposed wires, flooding, etc.)</label>
+   <div id="formMsg" class="msg err" role="alert"></div>
+   <button id="submitBtn" class="primary">Submit request</button>
   </div>
   <div class="card"><h3 id="listTitle">Requests</h3><div id="list"></div></div>
  </section>
@@ -56,7 +114,7 @@ $('loginBtn').onclick=async()=>{
   const r=await api('/login','POST',{username:$('username').value,password:$('password').value});
   if(!r.ok){$('loginErr').textContent=r.data.error;return;}
   token=r.data.token;me=r.data.user;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
-  $('who').innerHTML=me.name+' ('+me.role+') <button id="logout" style="margin:0 0 0 8px">Logout</button>';
+  $('who').innerHTML='<span class="avatar">'+esc(me.name.charAt(0))+'</span><span>'+esc(me.name)+' <em class="role">'+esc(me.role)+'</em></span><button id="logout" class="ghost">Logout</button>';
   $('logout').onclick=()=>location.reload();
   $('category').innerHTML=['Electrical','Plumbing','Network/IT','Furniture','Cleaning','Other'].map(c=>`<option>${c}</option>`).join('');
   $('formCard').classList.toggle('hidden',me.role!=='requester');
@@ -66,8 +124,8 @@ $('loginBtn').onclick=async()=>{
 $('submitBtn').onclick=async()=>{
   const r=await api('/requests','POST',{category:$('category').value,location:$('location').value,description:$('description').value,urgency:$('urgency').value,safetyRisk:$('safety').checked});
   const m=$('formMsg');
-  if(r.ok){m.className='ok';m.textContent=r.data.merged?'Similar open request found – your report was added to it (priority raised).':'Request submitted.';$('description').value='';}
-  else{m.className='err';m.textContent=(r.data.errors||[r.data.error]).join(' | ');}
+  if(r.ok){m.className='msg ok';m.textContent=r.data.merged?'Similar open request found – your report was added to it (priority raised).':'Request submitted.';$('description').value='';}
+  else{m.className='msg err';m.textContent=(r.data.errors||[r.data.error]).join(' | ');}
   refresh();
 };
 async function act(id,path,body){const r=await api('/requests/'+id+path,'POST',body);if(!r.ok)alert(r.data.error);refresh();}
@@ -75,14 +133,15 @@ async function refresh(){
   const r=await api('/requests');const rows=r.data;
   $('listTitle').textContent=me.role==='admin'?'All requests (highest priority first)':me.role==='technician'?'My assigned jobs':'My reports';
   if(me.role==='admin'){const s=(await api('/stats')).data;$('statsBox').classList.remove('hidden');
-    $('statsBox').innerHTML='<strong>Dashboard:</strong> unresolved '+s.unresolved+' | '+Object.entries(s.byStatus).map(([k,v])=>k+': '+v).join(' | ');}
-  $('list').innerHTML='<table><tr><th>#</th><th>Category / Location</th><th>Description</th><th>Priority</th><th>Reports</th><th>Status</th><th>Action</th></tr>'+rows.map(x=>{
+    $('statsBox').innerHTML='<div class="chip big"><b>'+s.unresolved+'</b><span>Unresolved</span></div>'+['Open','Assigned','In Progress','Resolved'].map(k=>'<div class="chip"><b>'+(s.byStatus[k]||0)+'</b><span>'+k+'</span></div>').join('')+'<div class="chip"><b>'+s.avgUnresolvedPriority+'</b><span>Avg priority</span></div>';}
+  $('list').innerHTML='<div class="tablewrap"><table><tr><th>#</th><th>Category / Location</th><th>Description</th><th>Priority</th><th>Reports</th><th>Status</th><th>Action</th></tr>'+rows.map(x=>{
     let a='';
-    if(me.role==='admin'&&x.status==='Open')a=`<select id="t${x.id}">${techs.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select><button onclick="act(${x.id},'/assign',{technicianId:document.getElementById('t${x.id}').value})">Assign</button>`;
-    if(me.role==='technician'&&x.status==='Assigned')a=`<button onclick="act(${x.id},'/status',{status:'In Progress'})">Start work</button>`;
-    if(me.role==='technician'&&x.status==='In Progress')a=`<button onclick="act(${x.id},'/status',{status:'Resolved',note:prompt('Resolution note?')||''})">Mark resolved</button>`;
-    if(me.role==='requester'&&x.status==='Resolved')a=`<button onclick="act(${x.id},'/status',{status:'Open',note:prompt('Why reopen?')||''})">Reopen</button>`;
-    return `<tr><td>${x.id}</td><td>${esc(x.category)}<br><small>${esc(x.location)}</small></td><td>${esc(x.description)}</td><td><span class="tag ${x.priority_label}">${x.priority_label} (${x.priority})</span></td><td>${x.report_count}</td><td>${x.status}${x.technician_name?'<br><small>'+esc(x.technician_name)+'</small>':''}</td><td>${a}</td></tr>`;}).join('')+'</table>';
+    if(me.role==='admin'&&x.status==='Open')a=`<select id="t${x.id}">${techs.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select><button class="primary sm" onclick="act(${x.id},'/assign',{technicianId:document.getElementById('t${x.id}').value})">Assign</button>`;
+    if(me.role==='technician'&&x.status==='Assigned')a=`<button class="primary sm" onclick="act(${x.id},'/status',{status:'In Progress'})">Start work</button>`;
+    if(me.role==='technician'&&x.status==='In Progress')a=`<button class="primary sm" onclick="act(${x.id},'/status',{status:'Resolved',note:prompt('Resolution note?')||''})">Mark resolved</button>`;
+    if(me.role==='requester'&&x.status==='Resolved')a=`<button class="primary sm" onclick="act(${x.id},'/status',{status:'Open',note:prompt('Why reopen?')||''})">Reopen</button>`;
+    return `<tr><td>${x.id}</td><td>${esc(x.category)}<br><small>${esc(x.location)}</small></td><td>${esc(x.description)}</td><td><span class="tag ${x.priority_label}">${x.priority_label} (${x.priority})</span></td><td>${x.report_count}</td><td><span class="st st-${x.status.replace(' ','')}">${x.status}</span>${x.technician_name?'<br><small>'+esc(x.technician_name)+'</small>':''}</td><td>${a}</td></tr>`;}).join('')+'</table></div>';
+  if(!rows.length)$('list').innerHTML='<p class="empty">Nothing here yet.</p>';
 }
 </script>
 </body>
